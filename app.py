@@ -2,13 +2,30 @@
 FastAPI app that deploys model without web GUI. 
 """
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from mylib import BankNotes
 import pickle
 
 app = FastAPI()
+
 pickle_in = open("classifier.pkl", "rb")
 classifier = pickle.load(pickle_in)
+
+
+app.mount(
+    "/static", StaticFiles(directory="static"), name="static"
+)  # Mount static files, specify directory
+
+
+templates = Jinja2Templates(directory="templates")  # Template Directory
+
+
+@app.get("/data/{data}")
+async def read_data(request: Request, data: str):
+    return templates.TemplateResponse("index.html", {"request": request, "data": data})
+
 
 # Index route, opens automatically on http://127.0.0.1:8000
 @app.get("/")
